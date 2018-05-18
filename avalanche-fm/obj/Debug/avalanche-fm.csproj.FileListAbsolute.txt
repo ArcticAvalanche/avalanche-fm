@@ -1,0 +1,10 @@
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\bin\Debug\avalanche-fm.exe.config
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\bin\Debug\avalanche-fm.exe
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\bin\Debug\avalanche-fm.pdb
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csprojResolveAssemblyReference.cache
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche_fm.MainWindow.resources
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche_fm.Properties.Resources.resources
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csproj.GenerateResource.cache
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csproj.CoreCompileInputs.cache
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.exe
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.pdb
