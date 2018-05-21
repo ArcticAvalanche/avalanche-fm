@@ -8,3 +8,6 @@ C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csp
 C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csproj.CoreCompileInputs.cache
 C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.exe
 C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.pdb
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\bin\Debug\DotNetZip.dll
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\bin\Debug\DotNetZip.xml
+C:\Users\gamao\source\repos\avalanche-fm\avalanche-fm\obj\Debug\avalanche-fm.csproj.CopyComplete

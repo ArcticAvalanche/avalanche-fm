@@ -42,7 +42,9 @@
             this.stripCreateTxtFile = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.stripRefresh = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.listViewImageList = new System.Windows.Forms.ImageList(this.components);
+            this.stripCreateCommonFolder = new System.Windows.Forms.ToolStripMenuItem();
             this.listViewContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -114,17 +116,19 @@
             this.stripCreateFolder,
             this.stripCreateFile,
             this.toolStripSeparator1,
-            this.stripRefresh});
+            this.stripRefresh,
+            this.toolStripSeparator2});
             this.listViewContextMenu.Name = "listViewContextMenu";
-            this.listViewContextMenu.Size = new System.Drawing.Size(181, 98);
+            this.listViewContextMenu.Size = new System.Drawing.Size(143, 82);
             this.listViewContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.listViewContextMenu_Opening);
             // 
             // stripCreateFolder
             // 
+            this.stripCreateFolder.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.stripCreateCommonFolder});
             this.stripCreateFolder.Name = "stripCreateFolder";
             this.stripCreateFolder.Size = new System.Drawing.Size(180, 22);
             this.stripCreateFolder.Text = "Create folder";
-            this.stripCreateFolder.Click += new System.EventHandler(this.stripCreateFolder_Click);
             // 
             // stripCreateFile
             // 
@@ -137,7 +141,7 @@
             // stripCreateTxtFile
             // 
             this.stripCreateTxtFile.Name = "stripCreateTxtFile";
-            this.stripCreateTxtFile.Size = new System.Drawing.Size(149, 22);
+            this.stripCreateTxtFile.Size = new System.Drawing.Size(180, 22);
             this.stripCreateTxtFile.Text = "Create text file";
             this.stripCreateTxtFile.Click += new System.EventHandler(this.stripCreateTxtFile_Click);
             // 
@@ -153,12 +157,24 @@
             this.stripRefresh.Text = "Refresh";
             this.stripRefresh.Click += new System.EventHandler(this.stripRefresh_Click);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            // 
             // listViewImageList
             // 
             this.listViewImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("listViewImageList.ImageStream")));
             this.listViewImageList.TransparentColor = System.Drawing.Color.Transparent;
             this.listViewImageList.Images.SetKeyName(0, "hard-drive-disk-icon.png");
             this.listViewImageList.Images.SetKeyName(1, "agf_greene.png");
+            // 
+            // stripCreateCommonFolder
+            // 
+            this.stripCreateCommonFolder.Name = "stripCreateCommonFolder";
+            this.stripCreateCommonFolder.Size = new System.Drawing.Size(180, 22);
+            this.stripCreateCommonFolder.Text = "Common folder";
+            this.stripCreateCommonFolder.Click += new System.EventHandler(this.stripCreateFolder_Click);
             // 
             // MainWindow
             // 
@@ -192,6 +208,8 @@
         private System.Windows.Forms.ToolStripMenuItem stripCreateTxtFile;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem stripRefresh;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem stripCreateCommonFolder;
     }
 }
 

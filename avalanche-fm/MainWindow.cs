@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Ionic.Zip;
+using Microsoft.VisualBasic.FileIO;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,6 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -18,15 +21,27 @@ namespace avalanche_fm
         const string errorMessageCaption = "Error";
         const string standartFileName = "New file";
         const string standartFolderName = "New folder";
+        const string standartArchiveName = "New archive";
+        const int bufferSize = 16384;
         #endregion
+        
+        string SOURCE_PATH = "";
+        string WATCHER_START_PATH = @"C:\";
 
-        //???
-        List<string> specialNodes = new List<string>();
+        FileSystemWatcher bigBrother = new FileSystemWatcher();
 
         #region Конструктор
         public MainWindow()
         {
             InitializeComponent();
+            bigBrother.Path = WATCHER_START_PATH;
+            bigBrother.Filter = "*.*";
+            bigBrother.Created += RefreshListView;
+            bigBrother.Deleted += RefreshListView;
+            bigBrother.Changed += RefreshListView;
+            bigBrother.Renamed += RefreshListView;
+
+            bigBrother.EnableRaisingEvents = true;
         }
         #endregion
 
@@ -39,6 +54,7 @@ namespace avalanche_fm
 
         private void GoToDrivesDirectory()
         {
+            bigBrother.Path = WATCHER_START_PATH;
             listView.Items.Clear();
             DriveInfo[] drives = DriveInfo.GetDrives();
 
@@ -56,6 +72,7 @@ namespace avalanche_fm
 
         private void GoToSubdirectory(string name)
         {
+            
             string path = txtPath.Text;
             if (path == "")
             {
@@ -81,7 +98,8 @@ namespace avalanche_fm
 
         private void GoToDirectory(string path)
         {
-            listView.Items.Clear();
+            bigBrother.Path = txtPath.Text;
+            listView.Invoke(new Action(() => { listView.Items.Clear(); }));
             try
             {
                 DirectoryInfo dirInfo = new DirectoryInfo(path);
@@ -95,19 +113,19 @@ namespace avalanche_fm
                         
                     };
 
-                    listView.Items.Add(dirItem);
+                    listView.Invoke(new Action(() => { listView.Items.Add(dirItem); })); 
                 }
 
                 foreach (var file in dirInfo.GetFiles())
                 {
-                    listViewImageList.Images.Add(System.Drawing.Icon.ExtractAssociatedIcon(path + @"\" + file.Name));
+                    listView.Invoke(new Action(() => { listViewImageList.Images.Add(System.Drawing.Icon.ExtractAssociatedIcon(path + @"\" + file.Name)); })); 
                     ListViewItem fileItem = new ListViewItem()
                     {
                         Text = file.Name,
                         ImageIndex = listViewImageList.Images.Count - 1
                     };
 
-                    listView.Items.Add(fileItem);
+                    listView.Invoke(new Action(() => { listView.Items.Add(fileItem); }));
                 }
             }
             catch (Exception ex)
@@ -123,57 +141,10 @@ namespace avalanche_fm
             else GoToDrivesDirectory();
         }
 
-        private void RefreshListView()
+        private void RefreshListView(object sender, FileSystemEventArgs e)
         {
             if (txtPath.Text != "") GoToDirectory(txtPath.Text);
             else GoToDrivesDirectory();
-        }
-
-        private void InitializeTreeView()
-        {
-            specialNodes.Add("Desktop");
-
-            DriveInfo[] drives = DriveInfo.GetDrives();
-
-            foreach (var drive in drives)
-            {
-                TreeNode driveNode = new TreeNode()
-                {
-                    Text = drive.Name,
-                    ImageIndex = 0,
-                    SelectedImageIndex = 0
-                };
-
-                treeView.Nodes.Add(driveNode);
-            }
-
-            try
-            {
-                foreach (TreeNode node in treeView.Nodes)
-                {
-                    if (!specialNodes.Contains(node.Text))
-                    {
-                        DirectoryInfo di = new DirectoryInfo(node.Text);
-                        DirectoryInfo[] directories = di.GetDirectories("*", SearchOption.AllDirectories);
-
-                        foreach (var dir in directories)
-                        {
-                            TreeNode dirNode = new TreeNode()
-                            {
-                                Text = dir.Name,
-                                ImageIndex = 1,
-                                SelectedImageIndex = 1
-                            };
-
-                            treeView.Nodes[0].Nodes.Add(dirNode);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, errorMessageCaption);
-            }
         }
 
         private void listView_ItemActivate(object sender, EventArgs e)
@@ -200,7 +171,7 @@ namespace avalanche_fm
                 {
                     
                 }
-                RefreshListView();
+                //RefreshListView();
             }
             catch (Exception ex)
             {
@@ -216,7 +187,7 @@ namespace avalanche_fm
             try
             {
                 Directory.CreateDirectory(txtPath.Text + @"\" + tempFolderName);
-                RefreshListView();
+                //RefreshListView();
             }
             catch (Exception ex)
             {
@@ -226,46 +197,134 @@ namespace avalanche_fm
 
         private void stripRefresh_Click(object sender, EventArgs e)
         {
-            RefreshListView();
+            RefreshListView(null, null);
         }
 
         private void listViewContextMenu_Opening(object sender, CancelEventArgs e)
         {
-            ToolStripMenuItem stripDelete = new ToolStripMenuItem("Delete", null, stripDelete_Click);
+            ToolStripMenuItem stripCopy = new ToolStripMenuItem("Copy", null, stripCopy_Click);
+            ToolStripMenuItem stripPaste = new ToolStripMenuItem("Paste", null, stripPaste_Click);
             ToolStripMenuItem stripRename = new ToolStripMenuItem("Rename", null, stripRename_Click);
-
             ToolStripTextBox txtRename = new ToolStripTextBox
-            {
-                Text = standartFileName
-            };
+                {
+                    Text = standartFileName
+                };
+            ToolStripMenuItem stripCompression = new ToolStripMenuItem("Compression");
+            ToolStripMenuItem stripAddToZip = new ToolStripMenuItem("Add to .zip archive", null, stripAddToZip_Click);
+            ToolStripMenuItem stripDelete = new ToolStripMenuItem("Delete", null, stripDelete_Click);
+
+            List<ToolStripItem> listViewItemStripList = new List<ToolStripItem>();
+            listViewItemStripList.Add(stripCopy);
+            listViewItemStripList.Add(stripRename);
+            listViewItemStripList.Add(stripCompression);
+            listViewItemStripList.Add(stripDelete);
 
             stripRename.DropDownItems.Add(txtRename);
+            stripCompression.DropDownItems.Add(stripAddToZip);
 
             if (listView.SelectedItems.Count != 0)
             {
-                if (listViewContextMenu.Items.Count < 5)
+                if (listViewContextMenu.Items.Count <= 7)
                 {
-                    listViewContextMenu.Items.Add(stripRename);
-                    listViewContextMenu.Items.Add(stripDelete);
-                }
-
-                if (txtPath.Text == "")
-                {
-                    listViewContextMenu.Items[5].Enabled = false;
-                    listViewContextMenu.Items[4].Enabled = false;
-                }
-                else
-                {
-                    listViewContextMenu.Items[5].Enabled = true;
-                    listViewContextMenu.Items[4].Enabled = true;
+                    if (listViewContextMenu.Items.Count == 6)
+                    {
+                        listViewContextMenu.Items.Remove(listViewContextMenu.Items[5]);
+                    }
+                    foreach (var item in listViewItemStripList)
+                    {
+                        listViewContextMenu.Items.Add(item);
+                    }
                 }
             }
             else
             {
-                if (listViewContextMenu.Items.Count >= 5)
+                if (listViewContextMenu.Items.Count >= 7)
                 {
-                    listViewContextMenu.Items.Remove(listViewContextMenu.Items[5]);
-                    listViewContextMenu.Items.Remove(listViewContextMenu.Items[4]);
+                    (listViewContextMenu.Items[6] as ToolStripMenuItem).DropDownItems[0].Text = standartFileName;
+                    foreach (var item in listViewItemStripList)
+                    {
+                        listViewContextMenu.Items.Remove(listViewContextMenu.Items[5]);
+                    }
+                }
+                if (listViewContextMenu.Items.Count == 5) listViewContextMenu.Items.Add(stripPaste);
+            }
+            if (txtPath.Text == "")
+            {
+                foreach (ToolStripItem item in listViewContextMenu.Items)
+                {
+                    item.Enabled = false;
+                }
+            }
+            else
+            {
+                foreach (ToolStripItem item in listViewContextMenu.Items)
+                {
+                    item.Enabled = true;
+                }
+            }
+        }
+
+        private void stripCopy_Click(object sender, EventArgs e)
+        {
+            SOURCE_PATH = txtPath.Text + @"\" + listView.SelectedItems[0].Text;
+        }
+
+        private void stripPaste_Click(object sender, EventArgs e)
+        {
+            if (SOURCE_PATH != "")
+            {
+                try
+                {
+                    if (File.Exists(SOURCE_PATH))
+                    {
+                        string[] tempStr = SOURCE_PATH.Split(Path.DirectorySeparatorChar);
+                        string[] tempStr2 = tempStr[tempStr.Length - 1].Split('.');
+                        string destPath = txtPath.Text + @"\" + tempStr2[0] + " copy";
+                        int i = 0;
+                        while (File.Exists(destPath + (i == 0 ? "" : i.ToString()) + "." + tempStr2[tempStr2.Length - 1])) i++;
+                        destPath += (i == 0 ? "" : i.ToString()) + "." + tempStr2[tempStr2.Length - 1];
+
+                        #region Старая версия
+                        /*byte[] buffer = new byte[bufferSize];
+                        int bytesCopied = 0;
+                        UInt64 totalBytes = 0;
+
+                        using (FileStream inStream = File.Open(
+                            SOURCE_PATH, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        using (FileStream outStream = File.Open(
+                            destPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                        {
+                            do
+                            {
+                                bytesCopied = inStream.Read(buffer, 0, bufferSize);
+                                if (bytesCopied > 0)
+                                {
+                                    outStream.Write(buffer, 0, bytesCopied);
+                                    totalBytes += (UInt64)bytesCopied;
+                                }
+                            } while (bytesCopied > 0);
+                        }*/
+                        #endregion
+
+                        FileSystem.CopyFile(SOURCE_PATH, destPath);
+                    }
+
+                    if (Directory.Exists(SOURCE_PATH))
+                    {
+                        string[] tempStr = SOURCE_PATH.Split(Path.DirectorySeparatorChar);
+                        string destPath = txtPath.Text + @"\" + tempStr[tempStr.Length - 1] + " copy";
+                        int i = 0;
+                        while (Directory.Exists(destPath + (i == 0 ? "" : i.ToString())));
+                        destPath += (i == 0 ? "" : i.ToString());
+
+                        FileSystem.CopyDirectory(SOURCE_PATH, destPath);
+                    }
+
+                    //RefreshListView();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, errorMessageCaption);
                 }
             }
         }
@@ -277,6 +336,20 @@ namespace avalanche_fm
                 string oldPath = txtPath.Text + @"\" + listView.SelectedItems[0].Text;
                 string extension;
                 extension = Path.GetExtension(oldPath);
+
+
+                //ПЕРЕДАЛАТЬ!!!1!1!11!!! Крашится к чертям!!11!1!!!1
+                int i = 0;
+                while (File.Exists(txtPath.Text + @"\" +
+                    (sender as ToolStripMenuItem).DropDownItems[0].Text + extension)
+                    | Directory.Exists(txtPath.Text + @"\" +
+                    (sender as ToolStripMenuItem).DropDownItems[0].Text))
+                {
+                    i++;
+                }
+                (sender as ToolStripMenuItem).DropDownItems[0].Text += (i == 0 ? "" : i.ToString());
+
+
                 string newPath = txtPath.Text + @"\" +
                     (sender as ToolStripMenuItem).DropDownItems[0].Text + extension;
 
@@ -290,13 +363,55 @@ namespace avalanche_fm
                     Directory.Move(oldPath, newPath);
                 }
 
+
                 (sender as ToolStripMenuItem).DropDownItems[0].Text = standartFileName;
 
-                RefreshListView();
+                //RefreshListView();
             }
-            catch
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message, errorMessageCaption);
+            }
+        }
 
+        private void stripAddToZip_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string sourcePath = txtPath.Text + @"\" + listView.SelectedItems[0].Text;
+                string name = listView.SelectedItems[0].Text.Split('.')[0];
+                string destPath = txtPath.Text + @"\" + name;
+                int i = 0;
+                while (File.Exists(destPath + ".zip"))
+                {
+                    i++;
+                    destPath = txtPath.Text + @"\"+ name + (i == 0 ? "" : i.ToString());
+                }
+                destPath += ".zip";
+
+                if (Directory.Exists(sourcePath))
+                {
+                    using (ZipFile zip = new ZipFile())
+                    {
+                        zip.AddDirectory(sourcePath);
+                        zip.Save(destPath);
+                    }
+                }
+
+                if (File.Exists(sourcePath))
+                {
+                    using (ZipFile zip = new ZipFile())
+                    {
+                        zip.AddFile(sourcePath);
+                        zip.Save(destPath);
+                    }
+                }
+
+                //RefreshListView();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, errorMessageCaption);
             }
         }
 
@@ -308,19 +423,19 @@ namespace avalanche_fm
 
                 if (File.Exists(path))
                 {
-                    File.Delete(path);
+                    FileSystem.DeleteFile(path, UIOption.AllDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
                 }
 
                 if (Directory.Exists(path))
                 {
-                    Directory.Delete(path);
+                    FileSystem.DeleteDirectory(path, UIOption.AllDialogs, RecycleOption.SendToRecycleBin, UICancelOption.DoNothing);
                 }
 
-                RefreshListView();
+                //RefreshListView();
             }
-            catch
+            catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message, errorMessageCaption);
             }
         }
     }
